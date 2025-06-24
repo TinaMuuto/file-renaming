@@ -80,12 +80,14 @@ if uploaded_images:
                 parts = [row['Product family'], row['Product name'], row['Product variant'], row['Additional comment'], row['Brand']]
                 clean_parts = []
                 for part in parts:
+                    if pd.isna(part) or str(part).strip() == '':
+                        continue
                     p = str(part).strip().lower()
                     p = re.sub(r'[^a-z0-9\- ]', '', p)
                     p = p.replace(' ', '-')
                     clean_parts.append(p)
 
-                new_name = '-'.join([p for p in clean_parts if p])
+                new_name = '-'.join(clean_parts)
                 new_name = re.sub(r'-+', '-', new_name)[:105]
                 extension = os.path.splitext(img.name)[1].lower()
                 final_name = f"{new_name}{extension}"
