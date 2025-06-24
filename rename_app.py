@@ -67,6 +67,8 @@ if uploaded_images:
             st.stop()
 
         renamed_files = []
+        used_names = set()
+
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = os.path.join(tmpdir, "renamed")
             os.makedirs(output_dir, exist_ok=True)
@@ -87,10 +89,18 @@ if uploaded_images:
                     p = p.replace(' ', '-')
                     clean_parts.append(p)
 
-                new_name = '-'.join(clean_parts)
-                new_name = re.sub(r'-+', '-', new_name)[:105]
+                base_name = '-'.join(clean_parts)
+                base_name = re.sub(r'-+', '-', base_name)[:105]
                 extension = os.path.splitext(img.name)[1].lower()
-                final_name = f"{new_name}{extension}"
+
+                final_name = f"{base_name}{extension}"
+                counter = 1
+                while final_name in used_names:
+                    suffix = f"-{counter}"
+                    final_name = f"{base_name[:105 - len(suffix)]}{suffix}{extension}"
+                    counter += 1
+
+                used_names.add(final_name)
 
                 output_path = os.path.join(output_dir, final_name)
                 with open(output_path, "wb") as f:
