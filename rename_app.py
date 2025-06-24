@@ -61,7 +61,7 @@ if uploaded_images:
             st.error(f"Error reading file: {e}")
             st.stop()
 
-        required_cols = ["Original Filnavn", "Page Title", "Subject", "Version/Date", "Brand"]
+        required_cols = ["Original Filnavn", "Product family", "Product name", "Product variant", "Additional comment", "Brand"]
         if not all(col in df.columns for col in required_cols):
             st.error(f"The file must include the following columns: {', '.join(required_cols)}")
             st.stop()
@@ -77,7 +77,7 @@ if uploaded_images:
                     continue
 
                 row = match.iloc[0]
-                parts = [row['Page Title'], row['Subject'], row['Version/Date'], row['Brand']]
+                parts = [row['Product family'], row['Product name'], row['Product variant'], row['Additional comment'], row['Brand']]
                 clean_parts = []
                 for part in parts:
                     p = str(part).strip().lower()
