@@ -8,14 +8,14 @@ import shutil
 import re
 from io import BytesIO
 
-st.set_page_config(page_title="Image Renaming Tool", layout="centered")
+st.set_page_config(page_title="File Renaming Tool", layout="centered")
 st.title("File renaming assistant")
 
 st.markdown("""
-This tool helps you rename image files in bulk, so they follow naming conventions, comply with the European Accessability Act and are ready for use in e-mails, on website and Social Media.
+This tool helps you rename files in bulk, so they follow naming conventions, comply with the European Accessibility Act and are ready for use in e-mails, on websites and Social Media.
 
 ### How it works:
-1. Upload the images you want to rename.
+1. Upload the files (images or PDFs) you want to rename.
 2. Download an Excel template with the original file names.
 3. Fill in the metadata fields in the Excel file. If a cell is left blank the app will simply skip this.
 4. Upload the completed metadata file.
@@ -31,12 +31,12 @@ This tool helps you rename image files in bulk, so they follow naming convention
 - Max **110 characters**, including file extension
 """)
 
-uploaded_images = st.file_uploader("1. Upload the images to be renamed", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+uploaded_files = st.file_uploader("1. Upload the files to be renamed", type=["jpg", "jpeg", "png", "pdf"], accept_multiple_files=True)
 
-if uploaded_images:
-    filenames = [img.name for img in uploaded_images]
+if uploaded_files:
+    filenames = [file.name for file in uploaded_files]
     df_template = pd.DataFrame({
-        'Original Filnavn': filenames,
+        'Original Filename': filenames,
         'Product family': '',
         'Product name': '',
         'Product variant': '',
@@ -61,7 +61,7 @@ if uploaded_images:
             st.error(f"Error reading file: {e}")
             st.stop()
 
-        required_cols = ["Original Filnavn", "Product family", "Product name", "Product variant", "Additional comment", "Brand"]
+        required_cols = ["Original Filename", "Product family", "Product name", "Product variant", "Additional comment", "Brand"]
         if not all(col in df.columns for col in required_cols):
             st.error(f"The file must include the following columns: {', '.join(required_cols)}")
             st.stop()
@@ -73,8 +73,8 @@ if uploaded_images:
             output_dir = os.path.join(tmpdir, "renamed")
             os.makedirs(output_dir, exist_ok=True)
 
-            for img in uploaded_images:
-                match = df[df['Original Filnavn'] == img.name]
+            for file in uploaded_files:
+                match = df[df['Original Filename'] == file.name]
                 if match.empty:
                     continue
 
@@ -91,7 +91,7 @@ if uploaded_images:
 
                 base_name = '-'.join(clean_parts)
                 base_name = re.sub(r'-+', '-', base_name)[:105]
-                extension = os.path.splitext(img.name)[1].lower()
+                extension = os.path.splitext(file.name)[1].lower()
 
                 final_name = f"{base_name}{extension}"
                 counter = 1
@@ -104,18 +104,18 @@ if uploaded_images:
 
                 output_path = os.path.join(output_dir, final_name)
                 with open(output_path, "wb") as f:
-                    f.write(img.read())
+                    f.write(file.read())
 
-                renamed_files.append((img.name, final_name))
+                renamed_files.append((file.name, final_name))
 
-            zip_path = os.path.join(tmpdir, "renamed_images.zip")
+            zip_path = os.path.join(tmpdir, "renamed_files.zip")
             with zipfile.ZipFile(zip_path, "w") as zipf:
-                for file in os.listdir(output_dir):
-                    zipf.write(os.path.join(output_dir, file), arcname=file)
+                for file_in_dir in os.listdir(output_dir):
+                    zipf.write(os.path.join(output_dir, file_in_dir), arcname=file_in_dir)
 
             st.success("Files renamed successfully and ready for download")
             with open(zip_path, "rb") as f:
-                st.download_button("Download ZIP with renamed files", f, file_name="renamed_images.zip")
+                st.download_button("Download ZIP with renamed files", f, file_name="renamed_files.zip")
 
             st.markdown("## Overview of changes")
-            st.dataframe(pd.DataFrame(renamed_files, columns=["Original Filnavn", "New Filename"]))
+            st.dataframe(pd.DataFrame(renamed_files, columns=["Original Filename", "New Filename"]))
